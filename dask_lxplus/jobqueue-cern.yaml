@@ -1,0 +1,37 @@
+jobqueue:
+  cern:
+    name: dask-worker
+
+    # default JobBatchName
+    batch-name: dask-worker
+
+    # Default job resource requests
+    cores: 1
+    gpus: null
+    memory: "2 GiB"
+    processes: null
+
+    # default worker image
+    worker-image: "/cvmfs/unpacked.cern.ch/gitlab-registry.cern.ch/batch-team/dask-lxplus/lxdask-cc7:latest"
+
+    # default container runtime:
+    container-runtime: "singularity"
+
+    log-directory: null
+
+    extra: []
+
+    env-extra: []
+
+    job-extra: {}
+
+    scheduler-options: {}
+
+    death-timeout: 60
+
+    local-directory: "/tmp/"
+
+    shebang: "#!/usr/bin/env bash"
+
+    interface: null
+
