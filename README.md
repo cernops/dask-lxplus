@@ -52,4 +52,4 @@ is `"singularity"`.
 is defined in `jobqueue-cern.yaml`.
 
 `batch_name`: Optionally set a string that will identify the jobs in `HTCondor`. The default is 
-``"dask-worker"`
+`"dask-worker"`
