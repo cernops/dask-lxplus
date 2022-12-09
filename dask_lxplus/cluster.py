@@ -183,14 +183,8 @@ class CernCluster(HTCondorCluster):
         worker_image = worker_image or dask.config.get(f"jobqueue.{cls.config_name}.worker-image")
 
 
-        has_logdir = False
-        if "log_directory" in modified and modified["log_directory"]:
-            has_logdir = True
-
-        xroot_url = None
-        if has_logdir and modified["log_directory"].startswith("/eos/"):
-            xroot_url = get_xroot_url(modified["log_directory"])
-
+        has_logdir = "log_directory" in modified and modified["log_directory"]
+        xroot_url = get_xroot_url(modified["log_directory"]) if has_logdir and modified["log_directory"].startswith("/eos/") else None
 
         modified["job_extra"] = merge(
             {"universe": "docker" if container_runtime == "docker" else "vanilla"},
