@@ -148,7 +148,7 @@ class CernCluster(HTCondorCluster):
             container_runtime = container_runtime or image_type
 
         if lcg:
-            if not re.match('^/cvmfs/sft(?:-nightlies)?.cern.ch/lcg/views/.+/python[2,3]?$', sys.executable):
+            if not re.match('^/cvmfs/sft(?:-nightlies)?.cern.ch/lcg/.+/python[2,3]?$', sys.executable):
                 raise ValueError(f"You need to have loaded the LCG environment before running the python interpreter. Current interpreter: {sys.executable}")
 
         base_class_kwargs = CernCluster._modify_kwargs(
