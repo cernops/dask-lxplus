@@ -17,13 +17,15 @@ jobqueue:
     # default container runtime:
     container-runtime: "singularity"
 
-    log-directory: null
-
     extra: []
 
-    env-extra: []
+    env_extra: []
 
-    job-extra: {}
+    job_extra: {}
+
+    log-directory: null
+
+    job_extra_directives: {}
 
     scheduler-options: {}
 
@@ -35,3 +37,8 @@ jobqueue:
 
     interface: null
 
+    shared_temp_directory: null
+
+    worker_extra_args: []
+
+    job_script_prologue: []

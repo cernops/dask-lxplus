@@ -1,23 +1,33 @@
 import os
 import unittest
 from unittest.mock import patch
-from dask_lxplus.cluster import check_env_extra
+from dask_lxplus.cluster import check_job_script_prologue
 from dask_lxplus.cluster import get_xroot_url
 from dask_lxplus import CernCluster
 
 
 class TestCluster(unittest.TestCase):
 
-    def test_env_extra(self):
-        env_extra = ["PYTHONHOME=/usr/local/bin/python", f'LD_LIBRARY_PATH="/usr/local/lib"']
-        self.assertFalse(check_env_extra("PATH", []))
-        self.assertTrue(check_env_extra("PYTHONHOME", env_extra))
-        self.assertTrue(check_env_extra("LD_LIBRARY_PATH", env_extra))
-        self.assertFalse(check_env_extra("PATH", env_extra))
+    def test_job_script_prologue(self):
+        job_script_prologue = ["export PYTHONHOME=/usr/local/bin/python", 'export LD_LIBRARY_PATH="/usr/local/lib"']
+        self.assertFalse(check_job_script_prologue("PATH", []))
+        self.assertTrue(check_job_script_prologue("PYTHONHOME", job_script_prologue))
+        self.assertTrue(check_job_script_prologue("LD_LIBRARY_PATH", job_script_prologue))
+        self.assertFalse(check_job_script_prologue("PATH", job_script_prologue))
 
     def test_xroot_url(self):
         for p in ["/eos/user/b/bejones/SWAN_projects", "/eos/home-b/bejones/SWAN_projects", "/eos/home-io3/b/bejones/SWAN_projects"]:
             self.assertEqual(get_xroot_url(p), "root://eosuser.cern.ch//eos/user/b/bejones/SWAN_projects", f"{p}")
+
+    def test_submit_command_extra(self):
+        with CernCluster(
+            cores = 4,
+            processes = 2,
+            memory = "2000MB",
+            disk = "1000MB",
+        ) as cluster:
+            self.assertIn("-spool", cluster.new_spec['options']['submit_command_extra'])
+
 
     def test_job_script_singularity(self):
         with CernCluster(
@@ -26,7 +36,7 @@ class TestCluster(unittest.TestCase):
             memory = "2000MB",
             disk = "1000MB",
             container_runtime = "singularity",
-            job_extra = {
+            job_extra_directives = {
                 "MY.Jobflavour": '"longlunch"',
             },
         ) as cluster:
@@ -43,7 +53,7 @@ class TestCluster(unittest.TestCase):
             disk = "1000MB",
             container_runtime = "docker",
             worker_image = "dask-lxplus/lxdask-cc7:latest",
-            job_extra = {
+            job_extra_directives = {
                 "MY.Jobflavour": '"longlunch"',
             },
         ) as cluster:
