@@ -1,12 +1,12 @@
 import logging
 
 from collections import ChainMap
+import warnings
 import dask
 from dask_jobqueue import HTCondorCluster
 from dask_jobqueue.htcondor import HTCondorJob
 import re
 import sys
-from warnings import warn
 
 
 logger = logging.getLogger(__name__)
@@ -18,25 +18,25 @@ def merge(*args):
     return dict(ChainMap(*filter(None, args)))
 
 
-def check_env_extra(var, env_extra):
+def check_job_script_prologue(var, job_script_prologue):
     """
-    Check if an environment variable is set in env_extra.
+    Check if an environment variable is set in job_script_prologue.
 
     Parameters
     ----------
     var : str
         Name of the environment variable to check.
 
-    env_extra: list of k=v strings
+    job_script_prologue: list of k=v strings
 
     Returns
     -------
     bool
         True if the environment variable is set.
     """
-    if not env_extra:
+    if not job_script_prologue:
         return False
-    matches = list(filter(lambda x: re.match(f"\W*{var}\s*=.*", x), env_extra))
+    matches = list(filter(lambda x: re.match(f"\W*export {var}\s*=.*", x), job_script_prologue))
     if matches:
         return True
     return False
@@ -69,7 +69,6 @@ def get_xroot_url(eos_path):
 
 class CernJob(HTCondorJob):
     config_name = "cern"
-    submit_command = "condor_submit -spool"
 
     def __init__(self,
                  scheduler=None,
@@ -82,7 +81,11 @@ class CernJob(HTCondorJob):
             num_cores = base_class_kwargs.get("cores", 1)
             disk = f'{int(num_cores) * 20} GB'
 
+        warnings.simplefilter(action='ignore', category=FutureWarning)
+
         super().__init__(scheduler=scheduler, name=name, disk=disk, **base_class_kwargs)
+
+        warnings.resetwarnings()
 
         if hasattr(self, "log_directory"):
                 self.job_header_dict.pop("Stream_Output", None)
@@ -92,7 +95,7 @@ class CernJob(HTCondorJob):
 class CernCluster(HTCondorCluster):
     __doc__ = (
         HTCondorCluster.__doc__
-    + """
+    """
     A customized :class:`dask_jobqueue.HTCondorCluster` subclass for spawning Dask workers in the CERN HTCondor pool
 
     It provides the customizations and submit options required for the CERN pool.
@@ -141,7 +144,7 @@ class CernCluster(HTCondorCluster):
         """
 
         if image_type is not None:
-            warn(
+            warnings.warn(
                 "The `image_type` parameter is deprecated. Please use `container_runtime` instead.",
                 DeprecationWarning,
             )
@@ -160,7 +163,11 @@ class CernCluster(HTCondorCluster):
             lcg=lcg,
         )
 
+        warnings.simplefilter(action='ignore', category=FutureWarning)
+
         super().__init__(**base_class_kwargs)
+
+        warnings.resetwarnings()
 
     @classmethod
     def _modify_kwargs(cls,
@@ -186,7 +193,7 @@ class CernCluster(HTCondorCluster):
         has_logdir = "log_directory" in modified and modified["log_directory"]
         xroot_url = get_xroot_url(modified["log_directory"]) if has_logdir and modified["log_directory"].startswith("/eos/") else None
 
-        modified["job_extra"] = merge(
+        modified["job_extra_directives"] = merge(
             {"universe": "docker" if container_runtime == "docker" else "vanilla"},
             {"docker_image": f'"{worker_image}"'} if container_runtime == "docker" else None,
             {"MY.SingularityImage": f'"{worker_image}"'} if container_runtime == "singularity" else None,
@@ -200,14 +207,20 @@ class CernCluster(HTCondorCluster):
             {"Log": "worker-$(ClusterId).log"} if xroot_url else None,
             {"MY.SpoolOnEvict": False} if has_logdir else None,
             # extra user input
-            kwargs.get("job_extra", dask.config.get(f"jobqueue.{cls.config_name}.job-extra")),
+            kwargs.get("job_extra_directives", dask.config.get(f"jobqueue.{cls.config_name}.job_extra_directives")),
+            kwargs.get("job_extra", dask.config.get(f"jobqueue.{cls.config_name}.job_extra")),
             {"JobBatchName": f'"{batch_name or dask.config.get(f"jobqueue.{cls.config_name}.batch-name")}"'},
             # never transfer files
             {"transfer_output_files": '""'}
         )
 
-        modified["extra"] = [
-                *kwargs.get("extra", dask.config.get(f"jobqueue.{cls.config_name}.extra")),
+        submit_command_extra = kwargs.get("submit_command_extra", [])
+        if "-spool" not in submit_command_extra:
+            submit_command_extra.append('-spool')
+            modified["submit_command_extra"] = submit_command_extra
+
+        modified["worker_extra_args"] = [
+                *kwargs.get("worker_extra_args", dask.config.get(f"jobqueue.{cls.config_name}.worker_extra_args")),
             "--worker-port",
             "10000:10100",
         ]
