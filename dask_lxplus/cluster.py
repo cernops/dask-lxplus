@@ -95,7 +95,7 @@ class CernJob(HTCondorJob):
 class CernCluster(HTCondorCluster):
     __doc__ = (
         HTCondorCluster.__doc__
-    """
+    +"""
     A customized :class:`dask_jobqueue.HTCondorCluster` subclass for spawning Dask workers in the CERN HTCondor pool
 
     It provides the customizations and submit options required for the CERN pool.
