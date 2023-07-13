@@ -1,12 +1,16 @@
 import os
 import unittest
+from pyfakefs.fake_filesystem_unittest import TestCase
 from unittest.mock import patch
 from dask_lxplus.cluster import check_job_script_prologue
 from dask_lxplus.cluster import get_xroot_url
 from dask_lxplus import CernCluster
 
 
-class TestCluster(unittest.TestCase):
+class TestCluster(TestCase):
+
+    def setUp(self):
+        self.setUpPyfakefs()
 
     def test_job_script_prologue(self):
         job_script_prologue = ["export PYTHONHOME=/usr/local/bin/python", 'export LD_LIBRARY_PATH="/usr/local/lib"']
@@ -83,6 +87,27 @@ class TestCluster(unittest.TestCase):
             self.assertIn('FOO=BAR', job_script)
             self.assertIn('PATH=/one/two/three:/four/five/six', job_script)
             self.assertIn('getenv = true', job_script)
+
+    def test_job_script_outputdest(self):
+        with CernCluster(
+            cores=4,
+            processes=4,
+            memory="2000MB",
+            disk="1000MB",
+            log_directory="/eos/user/e/etejedor/dasklogs/"
+        ) as cluster:
+            job_script = cluster.job_script()
+            self.assertIn("output_destination = root://eosuser.cern.ch//eos/user/e/etejedor/dasklogs/", job_script)
+
+    def test_job_script_nooutputdest(self):
+        with CernCluster(
+            cores=4,
+            processes=4,
+            memory="2000MB",
+            disk="1000MB",
+        ) as cluster:
+            job_script = cluster.job_script()
+            self.assertNotIn("output_destination", job_script)
 
 
 if __name__ == '__main__':
