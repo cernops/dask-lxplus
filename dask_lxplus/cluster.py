@@ -189,9 +189,10 @@ class CernCluster(HTCondorCluster):
         container_runtime = container_runtime or dask.config.get(f"jobqueue.{cls.config_name}.container-runtime")
         worker_image = worker_image or dask.config.get(f"jobqueue.{cls.config_name}.worker-image")
 
-
-        has_logdir = "log_directory" in modified and modified["log_directory"]
-        xroot_url = get_xroot_url(modified["log_directory"]) if has_logdir and modified["log_directory"].startswith("/eos/") else None
+        logdir = modified.get("log_directory", dask.config.get(f"jobqueue.{cls.config_name}.log-directory", None))
+        if logdir:
+            modified["log_directory"] = logdir
+        xroot_url = get_xroot_url(modified["log_directory"]) if logdir and modified["log_directory"].startswith("/eos/") else None
 
         modified["job_extra_directives"] = merge(
             {"universe": "docker" if container_runtime == "docker" else "vanilla"},
@@ -205,7 +206,7 @@ class CernCluster(HTCondorCluster):
             {"Output": "worker-$(ClusterId).$(ProcId).out"} if xroot_url else None,
             {"Error": "worker-$(ClusterId).$(ProcId).err"} if xroot_url else None,
             {"Log": "worker-$(ClusterId).log"} if xroot_url else None,
-            {"MY.SpoolOnEvict": False} if has_logdir else None,
+            {"MY.SpoolOnEvict": False} if logdir else None,
             # extra user input
             kwargs.get("job_extra_directives", dask.config.get(f"jobqueue.{cls.config_name}.job_extra_directives")),
             kwargs.get("job_extra", dask.config.get(f"jobqueue.{cls.config_name}.job_extra")),
