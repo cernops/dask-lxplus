@@ -40,7 +40,7 @@ At CERN this would mean that you should, assuming say the default of `CentOS7` w
 the scheduler is run on something like`lxplus.cern.ch`also running CentOS7`. 
 An example use would be to do the following before running dask:
 ```bash
-$ . /cvmfs/sft.cern.ch/lcg/views/LCG_102/x86_64-centos7-gcc11-opt/setup.sh
+$ . /cvmfs/sft.cern.ch/lcg/views/LCG_104/x86_64-el9-gcc11-opt/setup.sh
 ```
 
 `container_runtime`: Can be set to `"singularity"` or `docker` or `"none"`. If a runtime is needed 
