@@ -8,11 +8,11 @@ jobqueue:
     # Default job resource requests
     cores: 1
     gpus: null
-    memory: "2 GiB"
+    memory: "3 GiB"
     processes: null
 
     # default worker image
-    worker-image: "/cvmfs/unpacked.cern.ch/gitlab-registry.cern.ch/batch-team/dask-lxplus/lxdask-cc7:latest"
+    worker-image: "/cvmfs/unpacked.cern.ch/gitlab-registry.cern.ch/batch-team/dask-lxplus/lxdask-al9:latest"
 
     # default container runtime:
     container-runtime: "singularity"
