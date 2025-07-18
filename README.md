@@ -11,7 +11,7 @@ import socket
 
 cluster = CernCluster(
     cores = 1,
-    memory = '2000MB',
+    memory = '3000MB',
     disk = '10GB',
     death_timeout = '60',
     lcg = True,
@@ -36,11 +36,11 @@ HTCondor cluster, but there are also a few changes to detail here.
 `lcg`: If set to `True` this will validate and use the LCG python environment per the managed [LCG](https://lcgdocs.web.cern.ch/lcgdocs/lcgreleases/introduction/) 
 releases. It will send the environment of the submitting scheduler to the batch worker node. DASK 
 normally requires that both the scheduler and the worker is the same python versions and libraries. 
-At CERN this would mean that you should, assuming say the default of `CentOS7` worker nodes, that 
-the scheduler is run on something like`lxplus.cern.ch`also running CentOS7`. 
+At CERN this would mean that you should, assuming say the default of `EL9` worker nodes, that 
+the scheduler is run on something like`lxplus.cern.ch`also running EL9`. 
 An example use would be to do the following before running dask:
 ```bash
-$ . /cvmfs/sft.cern.ch/lcg/views/LCG_104/x86_64-el9-gcc11-opt/setup.sh
+$ . /cvmfs/sft.cern.ch/lcg/views/LCG_107/x86_64-el9-gcc14-opt/setup.sh
 ```
 
 `container_runtime`: Can be set to `"singularity"` or `docker` or `"none"`. If a runtime is needed 

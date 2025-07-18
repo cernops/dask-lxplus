@@ -102,7 +102,7 @@ class CernCluster(HTCondorCluster):
     
     Additional CERN parameters:
     worker_image: The container to run the Dask workers inside. Defaults to: 
-    ``"/cvmfs/unpacked.cern.ch/gitlab-registry.cern.ch/batch-team/dask-lxplus/lxdask-cc7:latest"``
+    ``"/cvmfs/unpacked.cern.ch/gitlab-registry.cern.ch/batch-team/dask-lxplus/lxdask-al9:latest"``
     container_runtime: If a container runtime is not required, choose ``none``, otherwise ``singularity`` (the default) 
     or ``docker``. If using ``lcg`` it shouldn't be necessary as long as the scheduler side matches the client, which 
     at CERN means the lxplus version corresponding to the lxbatch version.
