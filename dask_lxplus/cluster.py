@@ -3,6 +3,7 @@ import logging
 from collections import ChainMap
 import warnings
 import dask
+import dask_jobqueue
 from dask_jobqueue import HTCondorCluster
 from dask_jobqueue.htcondor import HTCondorJob
 import re
@@ -152,7 +153,11 @@ class CernCluster(HTCondorCluster):
 
         if lcg:
             if not re.match('^/cvmfs/sft(?:-nightlies)?.cern.ch/lcg/.+/python[2,3]?$', sys.executable):
-                raise ValueError(f"You need to have loaded the LCG environment before running the python interpreter. Current interpreter: {sys.executable}")
+                warnings.warn(
+                    f"The `lcg` parameter is set to True, but the current python interpreter ({sys.executable}) does not seem to be from the LCG stack. "
+                    "Please ensure you have sourced the LCG environment before running the python interpreter.",
+                    UserWarning,
+                )
 
         base_class_kwargs = CernCluster._modify_kwargs(
             base_class_kwargs,
@@ -164,6 +169,11 @@ class CernCluster(HTCondorCluster):
         )
 
         warnings.simplefilter(action='ignore', category=FutureWarning)
+
+        if dask_jobqueue.__version__ >= "0.9.0":
+            base_class_kwargs['worker_command'] = 'distributed.cli.dask_worker'
+            if 'python' not in base_class_kwargs or base_class_kwargs['python'] is None:
+                base_class_kwargs['python'] = sys.executable
 
         super().__init__(**base_class_kwargs)
 
